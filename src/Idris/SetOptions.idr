@@ -495,15 +495,6 @@ preOptions (IgnoreMissingIPKG :: opts)
 preOptions (DumpCases f :: opts)
     = do setSession ({ dumpcases := Just f } !getSession)
          preOptions opts
-preOptions (DumpLifted f :: opts)
-    = do setSession ({ dumplifted := Just f } !getSession)
-         preOptions opts
-preOptions (DumpANF f :: opts)
-    = do setSession ({ dumpanf := Just f } !getSession)
-         preOptions opts
-preOptions (DumpVMCode f :: opts)
-    = do setSession ({ dumpvmcode := Just f } !getSession)
-         preOptions opts
 preOptions (Logging n :: opts)
     = do setSession ({ logEnabled := True,
                        logLevel $= insertLogLevel n } !getSession)

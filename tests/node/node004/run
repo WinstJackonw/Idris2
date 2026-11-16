@@ -1,5 +1,0 @@
-. ../../testutils.sh
-
-rm test.buf
-
-run Buffer.idr

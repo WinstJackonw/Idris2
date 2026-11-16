@@ -55,25 +55,11 @@ toString d@(MkDirs wdir sdir bdir ldir odir dfix edirs ppaths pdirs ldirs ddirs)
 
 public export
 data CG = Chez
-        | ChezSep
-        | Racket
-        | Gambit
-        | Node
-        | Javascript
-        | RefC
-        | VMCodeInterp
         | Other String
 
 export
 Eq CG where
   Chez == Chez = True
-  ChezSep == ChezSep = True
-  Racket == Racket = True
-  Gambit == Gambit = True
-  Node == Node = True
-  Javascript == Javascript = True
-  RefC == RefC = True
-  VMCodeInterp == VMCodeInterp = True
   Other s == Other t = s == t
   _ == _ = False
 
@@ -85,26 +71,12 @@ Ord CG where
     where
       constrToInt : CG -> Int
       constrToInt Chez = 1
-      constrToInt ChezSep = 2
-      constrToInt Racket = 3
-      constrToInt Gambit = 4
-      constrToInt Node = 5
-      constrToInt Javascript = 6
-      constrToInt RefC = 7
-      constrToInt VMCodeInterp = 8
-      constrToInt (Other _) = 9
+      constrToInt (Other _) = 2
 
 
 export
 Show CG where
   show Chez = "chez"
-  show ChezSep = "chez-sep"
-  show Racket = "racket"
-  show Gambit = "gambit"
-  show Node = "node"
-  show Javascript = "javascript"
-  show RefC = "refc"
-  show VMCodeInterp = "vmcode-interp"
   show (Other s) = s
 
 public export
@@ -196,9 +168,6 @@ record Session where
   logTimings : Maybe Nat -- log level, higher means more details
   debugElabCheck : Bool -- do conversion check to verify results of elaborator
   dumpcases : Maybe String -- file to output compiled case trees
-  dumplifted : Maybe String -- file to output lambda lifted definitions
-  dumpanf : Maybe String -- file to output ANF definitions
-  dumpvmcode : Maybe String -- file to output VM code definitions
   profile : Bool -- generate profiling information, if supported
   logErrorCount : Nat -- when parsing alternatives fails, how many errors
                       -- should be shown.
@@ -244,14 +213,7 @@ record Options where
 export
 availableCGs : Options -> List (String, CG)
 availableCGs o
-    = [("chez", Chez),
-       ("chez-sep", ChezSep),
-       ("racket", Racket),
-       ("node", Node),
-       ("javascript", Javascript),
-       ("refc", RefC),
-       ("gambit", Gambit),
-       ("vmcode-interp", VMCodeInterp)] ++ additionalCGs o
+    = [("chez", Chez)] ++ additionalCGs o
 
 export
 getCG : Options -> String -> Maybe CG
@@ -281,8 +243,8 @@ docsPPrint = MkPPOpts
 export
 defaultSession : Session
 defaultSession = MkSessionOpts False CoveringOnly False False Chez [] 1000 False False
-                               defaultLogLevel Nothing False Nothing Nothing
-                               Nothing Nothing False 1 False False True
+                               defaultLogLevel Nothing False Nothing False
+                               1 False False True
                                False [] False False
 
 export

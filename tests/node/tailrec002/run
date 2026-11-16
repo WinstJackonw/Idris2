@@ -1,4 +1,0 @@
-. ../../testutils.sh
-
-idris2 EvenOdd.idr -o app.js
-run Main.idr

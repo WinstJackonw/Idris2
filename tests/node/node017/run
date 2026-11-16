@@ -1,6 +1,0 @@
-. ../../testutils.sh
-
-rm -rf testdir
-
-run dir.idr | filter_test_dir
-cat testdir/test.txt

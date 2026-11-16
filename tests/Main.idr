@@ -95,14 +95,10 @@ idrisTestsAllBackends cg = testsInDir "allbackends"
   where
     -- Some tests are known to fail on some backends
     exclude : List String
-    exclude = catMaybes
-      [ -- RefC implements IEEE standard and distinguishes between 0.0 and -0.0
-        -- unlike other backends. So turn this test for now.
-        toMaybe (cg == C) "issue2362"
-      , toMaybe (cg == Node) "popen2"
-        -- Unfortunately the behaviour of Double is platform dependent so the
+    exclude =
+      [ -- Unfortunately the behaviour of Double is platform dependent so the
         -- following test is turned off.
-      , Just "evaluator005"
+        "evaluator005"
       ]
 
 ||| Totality checking, including positivity
@@ -141,19 +137,6 @@ chezTests = testsInDir "chez" "Chez backend"
   {codegen = Just Chez}
   {pred = not . ("channels009" ==)}
 
-refcTests : IO TestPool
-refcTests = testsInDir "refc" "Reference counting C backend" {codegen = Just C}
-
-racketTests : IO TestPool
-racketTests = testsInDir "racket" "Racket backend" {codegen = Just Racket}
-  { pred = not . (`elem` ["conditions006", "conditions007"]) }
-
-nodeTests : IO TestPool
-nodeTests = testsInDir "node" "Node backend" {codegen = Just Node}
-
-vmcodeInterpTests : IO TestPool
-vmcodeInterpTests = testsInDir "vmcode" "VMCode interpreter"
-
 ideModeTests : IO TestPool
 ideModeTests = testsInDir "ideMode" "IDE mode"
 
@@ -169,15 +152,15 @@ templateTests = testsInDir "templates" "Test templates"
 -- that only runs if all backends are
 -- available.
 baseLibraryTests : IO TestPool
-baseLibraryTests = testsInDir "base" "Base library" {requirements = [Chez, Node]}
+baseLibraryTests = testsInDir "base" "Base library" {requirements = [Chez]}
 
 -- same behavior as `baseLibraryTests`
 contribLibraryTests : IO TestPool
-contribLibraryTests = testsInDir "contrib" "Contrib library" {requirements = [Chez, Node]}
+contribLibraryTests = testsInDir "contrib" "Contrib library" {requirements = [Chez]}
 
 -- same behavior as `baseLibraryTests`
 linearLibraryTests : IO TestPool
-linearLibraryTests = testsInDir "linear" "Linear library" {requirements = [Chez, Node]}
+linearLibraryTests = testsInDir "linear" "Linear library" {requirements = [Chez]}
 
 codegenTests : IO TestPool
 codegenTests = testsInDir "codegen" "Code generation"
@@ -222,13 +205,9 @@ main = (runner =<<) $ sequence $
   , linearLibraryTests
   , contribLibraryTests
   , chezTests
-  , refcTests
-  , racketTests
-  , nodeTests
-  , vmcodeInterpTests
   , templateTests
   , codegenTests
   , commandLineTests
   ]
-  ++ map idrisTestsAllSchemes [Chez, Racket]
-  ++ map idrisTestsAllBackends [Chez, Node, Racket, C]
+  ++ map idrisTestsAllSchemes [Chez]
+  ++ map idrisTestsAllBackends [Chez]

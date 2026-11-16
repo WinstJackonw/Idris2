@@ -1,11 +1,6 @@
 . ../../testutils.sh
 
-# @removeFile@ uses primitive functions with definitions for both
-# C (supported by most backends) and Node.
+# @removeFile@ uses primitive functions with definitions for
+# C (supported by most backends) and Node (no longer supported).
 idris2 --cg chez -o test Test.idr
 ./build/exec/test
-
-. ../../testutils.sh
-
-idris2 --cg node -o test.js Test.idr
-node ./build/exec/test.js

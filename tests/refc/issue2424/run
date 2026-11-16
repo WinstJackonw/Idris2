@@ -1,4 +1,0 @@
-. ../../testutils.sh
-
-idris2 -o test ControlAppMonadTest.idr
-$VALGRIND ./build/exec/test

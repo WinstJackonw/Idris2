@@ -25,7 +25,7 @@ main = Main
 
 -- name of executable
 executable = test-exec
-opts = "--codegen node"
+opts = "--codegen chez"
 sourcedir = "src"
 builddir = "build"
 outputdir = "out"

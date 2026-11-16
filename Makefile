@@ -241,7 +241,7 @@ install-libdocs: libdocs
 	install -m 644 support/docs/*   ${DESTDIR}${PREFIX}/${NAME_VERSION}/docs
 
 
-.PHONY: bootstrap bootstrap-build bootstrap-racket bootstrap-racket-build bootstrap-test bootstrap-clean
+.PHONY: bootstrap bootstrap-build bootstrap-test bootstrap-clean
 
 # Bootstrapping using SCHEME
 #
@@ -258,16 +258,6 @@ bootstrap: support
 		> bootstrap-build/idris2_app/idris2-boot.ss
 	$(SHELL) ./bootstrap-stage1-chez.sh
 	IDRIS2_CG="chez" $(SHELL) ./bootstrap-stage2.sh
-
-# Bootstrapping using racket
-bootstrap-racket: support
-	mkdir -p bootstrap-build/idris2_app
-	cp ${IDRIS2_SUPPORT_DIR}/${IDRIS2_SUPPORT} bootstrap-build/idris2_app/
-	sed 's|__PREFIX__|${IDRIS2_BOOT_PREFIX}|g' \
-		bootstrap/idris2_app/idris2.rkt \
-		> bootstrap-build/idris2_app/idris2-boot.rkt
-	$(SHELL) ./bootstrap-stage1-racket.sh
-	IDRIS2_CG="racket" $(SHELL) ./bootstrap-stage2.sh
 
 bootstrap-test:
 	$(MAKE) test INTERACTIVE='' IDRIS2_PREFIX=${IDRIS2_BOOT_PREFIX}

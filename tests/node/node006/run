@@ -1,4 +1,0 @@
-. ../../testutils.sh
-
-idris2 TypeCase.idr < input
-check TypeCase2.idr

@@ -136,12 +136,6 @@ data CLOpt
   Metadata String |
    ||| Dump cases before compiling
   DumpCases String |
-   ||| Dump lambda lifted defs before compiling
-  DumpLifted String |
-   ||| Dump ANF defs before compiling
-  DumpANF String |
-   ||| Dump VM code defs before compiling
-  DumpVMCode String |
    ||| Run a REPL command then exit immediately
   RunREPL String |
   IgnoreMissingIPKG |
@@ -367,12 +361,6 @@ options = [MkOpt ["--check", "-c"] [] [CheckOnly]
               Nothing, -- dump metadata information from the given ttm file
            MkOpt ["--dumpcases"] [Required "output file"] (\f => [DumpCases f])
               Nothing, -- dump case trees to the given file
-           MkOpt ["--dumplifted"] [Required "output file"] (\f => [DumpLifted f])
-              Nothing, -- dump lambda lifted trees to the given file
-           MkOpt ["--dumpanf"] [Required "output file"] (\f => [DumpANF f])
-              Nothing, -- dump ANF to the given file
-           MkOpt ["--dumpvmcode"] [Required "output file"] (\f => [DumpVMCode f])
-              Nothing, -- dump VM Code to the given file
            MkOpt ["--debug-elab-check"] [] [DebugElabCheck]
               Nothing, -- do more elaborator checks (currently conversion in LinearCheck)
            MkOpt ["--alt-error-count"] [RequiredNat "alternative count"] (\c => [AltErrorCount c])

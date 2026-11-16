@@ -180,7 +180,6 @@ jobs:
         run: |
           brew update
           brew install --overwrite python@3.12
-          brew install node
           brew install chezscheme
           brew install coreutils
           echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
@@ -204,7 +203,6 @@ jobs:
       !contains(needs.initialise.outputs.commit_message, '[ci:')
       || contains(needs.initialise.outputs.commit_message, '[ci: windows]')
       || contains(needs.initialise.outputs.commit_message, '[ci: chez]')
-      || contains(needs.initialise.outputs.commit_message, '[ci: racket]')
     env:
       MSYSTEM: MINGW64
       MSYS2_PATH_TYPE: inherit
@@ -266,37 +264,6 @@ jobs:
         NIX_CONFIG: "experimental-features = nix-command flakes"
       run: nix build .#checks.x86_64-linux.idris2Tests -L
 
-  # RACKET
-
-  ubuntu-bootstrap-racket:
-    needs: [initialise, quick-check]
-    runs-on: ubuntu-latest
-    if: |
-      !contains(needs.initialise.outputs.commit_message, '[ci:')
-      || contains(needs.initialise.outputs.commit_message, '[ci: ubuntu]')
-      || contains(needs.initialise.outputs.commit_message, '[ci: racket]')
-
-    env:
-      IDRIS2_CG: racket
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y racket
-          echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
-      - name: Make bootstrap folder readonly
-        run: chmod -R a-w bootstrap
-      - name: Build from bootstrap
-        run: make bootstrap-racket && make install
-      - name: Artifact Bootstrapped Idris2
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: ubuntu-installed-bootstrapped-idris2-racket
-          path: ~/.idris2/
-
   ######################################################################
   # Self-hosting builds and testing
   ######################################################################
@@ -348,7 +315,6 @@ jobs:
           brew update
           brew install --overwrite python@3.12
           brew install chezscheme
-          brew install node
           brew install coreutils
           echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
           chmod +x "$HOME/.idris2/bin/idris2" "$HOME/.idris2/bin/idris2_app/"*
@@ -358,33 +324,6 @@ jobs:
       - name: Test self-hosted
         run: make ci-macos-test INTERACTIVE=''
         shell: bash
-
-  # RACKET
-
-  ubuntu-self-host-racket:
-    needs: ubuntu-bootstrap-racket
-    runs-on: ubuntu-latest
-    if: false
-    timeout-minutes: 60
-    env:
-      IDRIS2_CG: racket
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Download Idris2 Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ubuntu-installed-bootstrapped-idris2-racket
-          path: ~/.idris2/
-      - name: Install build dependencies
-        run: |
-          sudo apt-get install -y racket
-          echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
-          chmod +x "$HOME/.idris2/bin/idris2" "$HOME/.idris2/bin/idris2_app/"*
-      - name: Build self-hosted
-        run: make all IDRIS2_BOOT="idris2 -Werror" && make install
-      - name: Test self-hosted
-        run: make ci-ubuntu-test INTERACTIVE=''
 
   ubuntu-self-host-previous-version:
     needs: [initialise, quick-check]
@@ -420,62 +359,6 @@ jobs:
           include-hidden-files: true
           name: idris2-nightly-chez
           path: ~/.idris2/
-
-  windows-self-host-racket:
-    needs: [initialise, windows-bootstrap-chez]
-    runs-on: windows-latest
-    if: |
-      !contains(needs.initialise.outputs.commit_message, '[ci:')
-      || contains(needs.initialise.outputs.commit_message, '[ci: windows]')
-      || contains(needs.initialise.outputs.commit_message, '[ci: racket]')
-    env:
-      IDRIS2_CG: racket
-      MSYSTEM: MINGW64
-      MSYS2_PATH_TYPE: inherit
-      CC: gcc
-      RACKET_RACO: raco
-    steps:
-      - name: Init
-        run: |
-          git config --global core.autocrlf false
-          echo "PWD=$(c:\msys64\usr\bin\cygpath -u $(pwd))" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Get Chez Scheme
-        run: |
-          git clone --depth 1 --branch v10.4.1 https://github.com/cisco/ChezScheme
-          c:\msys64\usr\bin\bash -l -c "pacman -S --noconfirm tar make mingw-w64-x86_64-gcc"
-          echo "PWD=$(c:\msys64\usr\bin\cygpath -u $(pwd))" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Configure and Build Chez Scheme
-        run: |
-          c:\msys64\usr\bin\bash -l -c "cd $env:PWD && cd ChezScheme && ./configure --threads && make"
-      - name: Set Path
-        run: |
-          $chez="$(pwd)\ChezScheme\ta6nt\bin\ta6nt"
-          $idris="$(pwd)\.idris2"
-          echo "$chez" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "$idris\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "IDRIS_PREFIX=$idris" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "PREFIX=$(c:\msys64\usr\bin\cygpath -u $idris)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Download Idris2 Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-installed-bootstrapped-idris2-chez
-          path: ${{ env.IDRIS_PREFIX }}
-      - name: Install build dependencies
-        uses: Bogdanp/setup-racket@v1.14
-        with:
-          variant: 'CS'
-          version: 'stable'
-          distribution: 'full'
-      - name: Self host
-        run: |
-          c:\msys64\usr\bin\bash -l -c "cd $env:PWD && make"
-      # TODO: fix the broken tests!
-      # - name: Test
-      #  run: c:\msys64\usr\bin\bash -l -c "cd $env:PWD && make ci-windows-test"
-      - name: Install
-        run: c:\msys64\usr\bin\bash -l -c "cd $env:PWD && make install"
 
   ######################################################################
   # Ubuntu API
@@ -801,7 +684,7 @@ jobs:
 
   overall-success:
     needs:
-      [ ubuntu-bootstrap-racket # ubuntu-self-host-racket
+      [ ubuntu-bootstrap-chez
       , macos-self-host-chez
       , ub-pack-test-lsp
       , ub-pack-test-pack
@@ -812,7 +695,6 @@ jobs:
       , nix-bootstrap-chez
       , ubuntu-self-host-chez
       , ubuntu-build-api
-      , windows-self-host-racket
       ]
     runs-on: ubuntu-latest
     steps:

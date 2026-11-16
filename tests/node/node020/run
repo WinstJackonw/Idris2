@@ -1,3 +1,0 @@
-. ../../testutils.sh
-
-POPEN_CMD="$idris2 --version" run Popen.idr

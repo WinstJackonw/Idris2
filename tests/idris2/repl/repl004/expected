@@ -10,9 +10,6 @@ Main> Set an option
   cg                  specify the codegen/backend to use
                       builtin codegens are:
                         chez
-                        racket
-                        refc
-                        node
 
   showimplicits       enable displaying implicit arguments as part of the
                       output
@@ -41,9 +38,6 @@ Main> Set an option
   cg                  specify the codegen/backend to use
                       builtin codegens are:
                         chez
-                        racket
-                        refc
-                        node
 
   showimplicits       enable displaying implicit arguments as part of the
                       output
@@ -72,9 +66,6 @@ Main> Set an option
   cg                  specify the codegen/backend to use
                       builtin codegens are:
                         chez
-                        racket
-                        refc
-                        node
 
   showimplicits       enable displaying implicit arguments as part of the
                       output
@@ -103,9 +94,6 @@ Main> Set an option
   cg                  specify the codegen/backend to use
                       builtin codegens are:
                         chez
-                        racket
-                        refc
-                        node
 
   showimplicits       enable displaying implicit arguments as part of the
                       output

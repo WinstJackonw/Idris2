@@ -1,4 +1,0 @@
-. ../../testutils.sh
-
-idris2 -o test Test.idr
-$VALGRIND ./build/exec/test

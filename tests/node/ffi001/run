@@ -1,2 +1,0 @@
-. ../../testutils.sh
-run Foreign.idr

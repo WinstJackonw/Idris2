@@ -1,4 +1,0 @@
-. ../../testutils.sh
-
-idris2 -o refc001 Tail.idr
-$VALGRIND ./build/exec/refc001

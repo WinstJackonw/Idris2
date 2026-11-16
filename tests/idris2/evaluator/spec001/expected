@@ -9,12 +9,6 @@ LOG specialise:5: New patterns for _PE.PE_smult_1:
 (_PE.PE_smult_1 ${_pe:1}) = (($resolved1 (Prelude.Types.S (Prelude.Types.S (Prelude.Types.S Prelude.Types.Z)))) {_pe:1})
 LOG specialise:5: New RHS: (Prelude.Types.plus {_pe:1}[0] (Prelude.Types.plus {_pe:1}[0] {_pe:1}[0]))
 LOG specialise:5: Already specialised _PE.PE_smult_1
-/* Main.main : IO () */
-function Main_main($0) {
- const $1 = Prelude_IO_prim__getStr($0);
- const $4 = Prelude_Types_prim__integerToNat(_bigIntOfString($1));
- return Prelude_IO_prim__putStr((Prelude_Show_show_Show_Nat(($4+($4+$4)))+'\n'), $0);
-}
 1/1: Building Desc (Desc.idr)
 LOG specialise.declare:5: Specialising Desc.fold ($resolved1) -> _PE.PE_fold_1 by (0, Dynamic), (1, Static (Desc.Sum Desc.Stop (Desc.Prod Desc.Rec Desc.Rec))), (2, Dynamic)
 LOG specialise:3: Specialised type _PE.PE_fold_1: {0 a : Type} -> ({arg:1} : ({arg:2} : (Desc.Meaning (Desc.Sum Desc.Stop (Desc.Prod Desc.Rec Desc.Rec)) a[0])) -> a[1]) -> ({arg:3} : (Desc.Mu (Desc.Sum Desc.Stop (Desc.Prod Desc.Rec Desc.Rec)))) -> a[2]

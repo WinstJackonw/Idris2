@@ -1,13 +1,10 @@
 module Compiler.Common
 
 
-import Compiler.ANF
 import Compiler.CompileExpr
 import Compiler.Inline
-import Compiler.LambdaLift
 import Compiler.Opts.Constructor
 import Compiler.Opts.CSE
-import Compiler.VMCode
 
 import Core.Binary.Prims
 import Core.Directory
@@ -55,27 +52,6 @@ record Codegen where
   ||| If incremental compilation is supported, get the output file extension
   incExt : Maybe String
 
--- Say which phase of compilation is the last one to use - it saves time if
--- you only ask for what you need.
-public export
-data UsePhase = Cases | Lifted | ANF | VMCode
-
-Eq UsePhase where
-  (==) Cases Cases = True
-  (==) Lifted Lifted = True
-  (==) ANF ANF = True
-  (==) VMCode VMCode = True
-  (==) _ _ = False
-
-Ord UsePhase where
-  compare x y = compare (tag x) (tag y)
-    where
-      tag : UsePhase -> Int
-      tag Cases = 0
-      tag Lifted = 1
-      tag ANF = 2
-      tag VMCode = 3
-
 public export
 record CompileData where
   constructor MkCompileData
@@ -86,16 +62,6 @@ record CompileData where
   exported : List (Name, String) -- names to be made accessible to the foreign
                      -- and what they should be called in that language
   namedDefs : List (Name, FC, NamedDef)
-  lambdaLifted : List (Name, LiftedDef)
-       -- ^ lambda lifted definitions, if required. Only the top level names
-       -- will be in the context, and (for the moment...) I don't expect to
-       -- need to look anything up, so it's just an alist.
-  anf : List (Name, ANFDef)
-       -- ^ lambda lifted and converted to ANF (all arguments to functions
-       -- and constructors transformed to either variables or Null if erased)
-  vmcode : List (Name, VMDef)
-       -- ^ A much simplified virtual machine code, suitable for passing
-       -- to a more low level target such as C
 
 ||| compile
 ||| Given a value of type Codegen, produce a standalone function
@@ -269,17 +235,10 @@ getExported backend all
 export
 getCompileDataWith : {auto c : Ref Ctxt Defs} ->
                      List String -> -- which FFI(s), if compiling foreign exports
-                     (doLazyAnnots : Bool) ->
-                     UsePhase -> ClosedTerm -> Core CompileData
-getCompileDataWith exports doLazyAnnots phase_in tm_in
+                     ClosedTerm -> Core CompileData
+getCompileDataWith exports tm_in
     = do log "compile.execute" 10 $ "Getting compiled data for: " ++ show tm_in
          sopts <- getSession
-         let phase = foldl {t=List} (flip $ maybe id max) phase_in $
-                       [ Cases <$ dumpcases sopts
-                       , Lifted <$ dumplifted sopts
-                       , ANF <$ dumpanf sopts
-                       , VMCode <$ dumpvmcode sopts
-                       ]
 
          -- When we compile a REPL expression, there may be leftovers holes in it.
          -- Turn these into runtime errors.
@@ -345,46 +304,16 @@ getCompileDataWith exports doLazyAnnots phase_in tm_in
          namedDefs <- logTime 2 "Forget names" $
            traverse getNamedDef cseDefs
 
-         let mainname = MN "__mainExpression" 0
-         (liftedtm, ldefs) <- liftBody {doLazyAnnots} mainname csetm
-
-         lifted_in <- if phase >= Lifted
-                         then logTime 2 "Lambda lift" $
-                              traverse (lambdaLift doLazyAnnots) cseDefs
-                         else pure []
-
-         let lifted = (mainname, MkLFun Scope.empty Scope.empty liftedtm) ::
-                      (ldefs ++ concat lifted_in)
-
-         anf <- if phase >= ANF
-                   then logTime 2 "Get ANF" $ traverse (\ (n, d) => pure (n, !(toANF d))) lifted
-                   else pure []
-         vmcode <- if phase >= VMCode
-                      then logTime 2 "Get VM Code" $ pure (allDefs anf)
-                      else pure []
-
          defs <- get Ctxt
          whenJust (dumpcases sopts) $ \ f =>
             do coreLift $ putStrLn $ "Dumping case trees to " ++ f
                dumpIR f (map (\(n, _, def) => (n, def)) namedDefs)
 
-         whenJust (dumplifted sopts) $ \ f =>
-            do coreLift $ putStrLn $ "Dumping lambda lifted defs to " ++ f
-               dumpIR f lifted
-
-         whenJust (dumpanf sopts) $ \ f =>
-            do coreLift $ putStrLn $ "Dumping ANF defs to " ++ f
-               dumpIR f anf
-
-         whenJust (dumpvmcode sopts) $ \ f =>
-            do coreLift $ putStrLn $ "Dumping VM defs to " ++ f
-               dumpIR f vmcode
-
          -- We're done with our minimal context now, so put it back the way
          -- it was. Back ends shouldn't look at the global context, because
          -- it'll have to decode the definitions again.
          traverse_ replaceEntry entries
-         pure (MkCompileData csetm exported namedDefs lifted anf vmcode)
+         pure (MkCompileData csetm exported namedDefs)
   where
     lookupBackend :
         List String ->
@@ -404,8 +333,7 @@ getCompileDataWith exports doLazyAnnots phase_in tm_in
 -- Return the names, the type tags, and a compiled version of the expression
 export
 getCompileData : {auto c : Ref Ctxt Defs} ->
-                 (doLazyAnnots : Bool) ->
-                 UsePhase -> ClosedTerm -> Core CompileData
+                 ClosedTerm -> Core CompileData
 getCompileData = getCompileDataWith []
 
 export
@@ -423,10 +351,8 @@ compDef n = do
   pure $ Just (n, location def, cexpr)
 
 export
-getIncCompileData : {auto c : Ref Ctxt Defs} ->
-                    (doLazyAnnots : Bool) ->
-                    UsePhase -> Core CompileData
-getIncCompileData doLazyAnnots phase
+getIncCompileData : {auto c : Ref Ctxt Defs} -> Core CompileData
+getIncCompileData
     = do defs <- get Ctxt
          -- Compile all the names in 'toIR', since those are the ones defined
          -- in the current source file
@@ -437,18 +363,7 @@ getIncCompileData doLazyAnnots phase
 
          namedDefs <- traverse getNamedDef cseDefs
 
-         lifted_in <- if phase >= Lifted
-                         then logTime 2 "Lambda lift" $
-                              traverse (lambdaLift doLazyAnnots) cseDefs
-                         else pure []
-         let lifted = concat lifted_in
-         anf <- if phase >= ANF
-                   then logTime 2 "Get ANF" $ traverse (\ (n, d) => pure (n, !(toANF d))) lifted
-                   else pure []
-         vmcode <- if phase >= VMCode
-                      then logTime 2 "Get VM Code" $ pure (allDefs anf)
-                      else pure []
-         pure (MkCompileData (CErased emptyFC) [] namedDefs lifted anf vmcode)
+         pure (MkCompileData (CErased emptyFC) [] namedDefs)
 
 -- Some things missing from Prelude.File
 

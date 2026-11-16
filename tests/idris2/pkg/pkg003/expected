@@ -7,8 +7,6 @@ Overridable options are:
     --timing
     --log <log level>
     --dumpcases <file>
-    --dumplifted <file>
-    --dumpvmcode <file>
     --debug-elab-check
     --codegen <cg>
     --inc <cg>

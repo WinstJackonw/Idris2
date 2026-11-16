@@ -1,5 +1,0 @@
-. ../../testutils.sh
-
-rm testout.txt
-
-run File.idr

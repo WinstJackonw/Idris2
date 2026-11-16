@@ -897,27 +897,13 @@ TTC CDef where
 export
 TTC CG where
   toBuf Chez = tag 0
-  toBuf ChezSep = tag 1
-  toBuf Racket = tag 2
-  toBuf Gambit = tag 3
   toBuf (Other s) = do tag 4; toBuf s
-  toBuf Node = tag 5
-  toBuf Javascript = tag 6
-  toBuf RefC = tag 7
-  toBuf VMCodeInterp = tag 8
 
   fromBuf
       = case !getTag of
              0 => pure Chez
-             1 => pure ChezSep
-             2 => pure Racket
-             3 => pure Gambit
              4 => do s <- fromBuf
                      pure (Other s)
-             5 => pure Node
-             6 => pure Javascript
-             7 => pure RefC
-             8 => pure VMCodeInterp
              _ => corrupt "CG"
 
 export

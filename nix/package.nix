@@ -1,5 +1,5 @@
 { stdenv, lib, chez, clang, gmp, makeWrapper, installShellFiles, support, idris2Version
-, srcRev, gambit, nodejs, zsh, idris2Bootstrap ? null }:
+, srcRev, zsh, idris2Bootstrap ? null }:
 
 # Uses scheme to bootstrap the build of idris2
 let
@@ -50,7 +50,7 @@ stdenv.mkDerivation rec {
   # checks happen against built compiler prior to the postInstall
   # wrapper below so we must augment some paths to point at prebuilt
   # support paths regardless of whether we are bootstrapping or not.
-  checkInputs = [ gambit nodejs ]; # racket ];
+  checkInputs = [ ];
   checkFlags = [
     "INTERACTIVE="
     "IDRIS2_DATA=${supportSharePath}"

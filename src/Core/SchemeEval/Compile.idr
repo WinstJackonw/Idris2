@@ -591,18 +591,6 @@ initEvalWith "chez"
                        put Ctxt ({ schemeEvalLoaded := True } defs)
                        pure True)
                 (\err => pure False)
-initEvalWith "racket"
-    = do defs <- get Ctxt
-         if defs.schemeEvalLoaded
-            then pure True
-            else
-             catch (do f <- readDataFile "racket/ct-support.rkt"
-                       Just _ <- coreLift $ evalSchemeStr $ "(begin " ++ f ++ ")"
-                            | Nothing => pure False
-                       put Ctxt ({ schemeEvalLoaded := True } defs)
-                       pure True)
-                (\err => do coreLift $ printLn err
-                            pure False)
 initEvalWith _ = pure False -- only works on Chez for now
 
 -- Initialise the internal functions we need to build/extend blocked

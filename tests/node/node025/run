@@ -1,3 +1,0 @@
-. ../../testutils.sh
-
-run Fix1037.idr

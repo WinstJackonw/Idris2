@@ -483,7 +483,7 @@ compileToSS c prof appdir tm outfile
     = do ds <- getDirectives Chez
          libs <- findLibs ds
          traverse_ copyLib libs
-         cdata <- getCompileData False Cases tm
+         cdata <- getCompileData tm
          let ndefs = namedDefs cdata
          let ctm = forget (mainExpr cdata)
 
@@ -670,7 +670,7 @@ incCompile c s sourceFile
          ssFile <- getTTCFileName sourceFile "ss"
          soFile <- getTTCFileName sourceFile "so"
          soFilename <- getObjFileName sourceFile "so"
-         cdata <- getIncCompileData False Cases
+         cdata <- getIncCompileData
 
          d <- getDirs
          outputDir <- ttcBuildDirectory
